@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import PrivateRoute from "@/components/PrivateRoute";
@@ -14,22 +14,27 @@ export default function AdminAllEquipmentPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
-
-  const loadAll = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await apiFetch("/api/equipment/admin/all", {}, token);
-      setItems(data);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadAll();
-  }, [loadAll]);
+    let active = true;
+    if (!token) return;
+    apiFetch("/api/equipment/admin/all", {}, token)
+      .then((data) => {
+        if (active) setItems(data);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, refreshKey]);
+
+  const reload = () => setRefreshKey((k) => k + 1);
 
   const handleStatus = async (id, status) => {
     try {
@@ -39,7 +44,7 @@ export default function AdminAllEquipmentPage() {
         token
       );
       toast.success(`Equipment ${status}`);
-      loadAll();
+      reload();
     } catch (err) {
       toast.error(err.message);
     }
@@ -57,7 +62,7 @@ export default function AdminAllEquipmentPage() {
     try {
       await apiFetch(`/api/equipment/${id}`, { method: "DELETE" }, token);
       toast.success("Equipment deleted");
-      loadAll();
+      reload();
     } catch (err) {
       toast.error(err.message);
     }
@@ -163,7 +168,7 @@ export default function AdminAllEquipmentPage() {
             equipment={editingItem}
             token={token}
             onClose={() => setEditingItem(null)}
-            onUpdated={loadAll}
+            onUpdated={reload}
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/PrivateRoute";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -11,22 +11,25 @@ export default function AdminAllRentalsPage() {
   const { token } = useAuth();
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const loadRentals = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await apiFetch("/api/bookings/admin", {}, token);
-      setRentals(data);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadRentals();
-  }, [loadRentals]);
+    let active = true;
+    if (!token) return;
+    apiFetch("/api/bookings/admin", {}, token)
+      .then((data) => {
+        if (active) setRentals(data);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, refreshKey]);
 
   const handleStatusChange = async (id, bookingStatus) => {
     try {
@@ -36,7 +39,7 @@ export default function AdminAllRentalsPage() {
         token
       );
       toast.success(`Booking marked ${bookingStatus}`);
-      loadRentals();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message);
     }

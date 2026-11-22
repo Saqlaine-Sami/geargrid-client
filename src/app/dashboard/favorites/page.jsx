@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/PrivateRoute";
@@ -12,28 +12,31 @@ export default function FavoritesPage() {
   const { token } = useAuth();
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const loadFavorites = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await apiFetch("/api/favorites", {}, token);
-      setFavorites(data);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadFavorites();
-  }, [loadFavorites]);
+    let active = true;
+    if (!token) return;
+    apiFetch("/api/favorites", {}, token)
+      .then((data) => {
+        if (active) setFavorites(data);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, refreshKey]);
 
   const handleRemove = async (equipmentId) => {
     try {
       await apiFetch(`/api/favorites/${equipmentId}`, { method: "DELETE" }, token);
       toast.success("Removed from favorites");
-      loadFavorites();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message);
     }

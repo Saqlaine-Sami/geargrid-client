@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
@@ -15,22 +15,27 @@ export default function MyEquipmentPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState(null);
-
-  const loadEquipment = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await apiFetch("/api/equipment/owner/me", {}, token);
-      setItems(data);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadEquipment();
-  }, [loadEquipment]);
+    let active = true;
+    if (!token) return;
+    apiFetch("/api/equipment/owner/me", {}, token)
+      .then((data) => {
+        if (active) setItems(data);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, refreshKey]);
+
+  const reload = () => setRefreshKey((k) => k + 1);
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -46,7 +51,7 @@ export default function MyEquipmentPage() {
     try {
       await apiFetch(`/api/equipment/${id}`, { method: "DELETE" }, token);
       toast.success("Equipment deleted");
-      loadEquipment();
+      reload();
     } catch (err) {
       toast.error(err.message);
     }
@@ -142,7 +147,7 @@ export default function MyEquipmentPage() {
             equipment={editingItem}
             token={token}
             onClose={() => setEditingItem(null)}
-            onUpdated={loadEquipment}
+            onUpdated={reload}
           />
         )}
       </div>

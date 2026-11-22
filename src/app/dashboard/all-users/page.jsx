@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import PrivateRoute from "@/components/PrivateRoute";
@@ -12,22 +12,25 @@ export default function AllUsersPage() {
   const { user, token } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const loadUsers = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await apiFetch("/api/users", {}, token);
-      setUsers(data);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    let active = true;
+    if (!token) return;
+    apiFetch("/api/users", {}, token)
+      .then((data) => {
+        if (active) setUsers(data);
+      })
+      .catch((err) => {
+        if (active) toast.error(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, refreshKey]);
 
   const handleRoleChange = async (id, role) => {
     try {
@@ -37,7 +40,7 @@ export default function AllUsersPage() {
         token
       );
       toast.success(`Role updated to ${role}`);
-      loadUsers();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message);
     }
@@ -61,7 +64,7 @@ export default function AllUsersPage() {
     try {
       await apiFetch(`/api/users/${id}`, { method: "DELETE" }, token);
       toast.success("User deleted");
-      loadUsers();
+      setRefreshKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message);
     }
