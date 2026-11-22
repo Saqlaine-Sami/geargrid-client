@@ -10,6 +10,8 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "dev-fallback-secret-change-in-env",
   trustedOrigins: [
     "http://localhost:3000",
+    "http://localhost:3001",
+    "https://*.vercel.app",
     process.env.BETTER_AUTH_URL,
     process.env.NEXT_PUBLIC_APP_URL,
   ].filter(Boolean),
