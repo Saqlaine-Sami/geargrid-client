@@ -17,6 +17,8 @@ GearGrid is a transparent and secure full-stack Equipment Rental Platform where 
   - **Owner:** Business Analytics with Recharts, Add Equipment (with imgbb upload), My Equipment, My Equipment Rental, My Profile
   - **Admin:** Platform Analytics with Recharts, All Users (role management & user management), All Equipment (Approve, Reject, Update, Delete), All Rentals, My Profile
 - **Custom States:** Dedicated Loading, Error, and 404 Not Found pages.
+- **Pagination:** Server-backed pagination on the All Equipment page and Booking History pages (My Rentals, My Equipment Rental, All Rentals).
+- **Dark / Light Theme Toggle:** Persistent Dark Mode and Light Mode switcher stored in `localStorage`, available in both Navbar and Dashboard headers.
 
 ## NPM Packages Used
 - `next`, `react`, `react-dom` — Next.js App Router framework

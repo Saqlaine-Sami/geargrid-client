@@ -6,6 +6,9 @@ import { Search, RotateCcw } from "lucide-react";
 import { apiFetch, EQUIPMENT_CATEGORIES, RENTAL_TYPES } from "@/lib/api";
 import EquipmentCard from "@/components/EquipmentCard";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import Pagination from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 6;
 
 function AllEquipmentContent() {
   const searchParams = useSearchParams();
@@ -13,6 +16,9 @@ function AllEquipmentContent() {
 
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(initialCategory);
@@ -33,20 +39,32 @@ function AllEquipmentContent() {
       if (maxPrice !== "") params.append("maxPrice", maxPrice);
       if (availability !== "all") params.append("availability", availability);
       if (sort) params.append("sort", sort);
+      params.append("page", String(page));
+      params.append("limit", String(ITEMS_PER_PAGE));
 
       const data = await apiFetch(`/api/equipment?${params.toString()}`);
-      setEquipment(data);
+      if (Array.isArray(data)) {
+        setEquipment(data);
+        setTotalItems(data.length);
+        setTotalPages(1);
+      } else {
+        setEquipment(data.items || []);
+        setTotalItems(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      }
     } catch {
       setEquipment([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [search, category, rentalType, minPrice, maxPrice, availability, sort]);
+  }, [search, category, rentalType, minPrice, maxPrice, availability, sort, page]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEquipment();
-    }, 300);
+    }, 250);
     return () => clearTimeout(timer);
   }, [fetchEquipment]);
 
@@ -58,6 +76,7 @@ function AllEquipmentContent() {
     setMaxPrice("");
     setAvailability("all");
     setSort("newest");
+    setPage(1);
   };
 
   return (
@@ -79,14 +98,20 @@ function AllEquipmentContent() {
               placeholder="Search by equipment name, location, or category..."
               className="input input-bordered w-full pl-10"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
 
           <select
             className="select select-bordered w-full"
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="All">All Categories</option>
             {EQUIPMENT_CATEGORIES.map((c) => (
@@ -99,7 +124,10 @@ function AllEquipmentContent() {
           <select
             className="select select-bordered w-full"
             value={rentalType}
-            onChange={(e) => setRentalType(e.target.value)}
+            onChange={(e) => {
+              setRentalType(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="All">All Rental Types</option>
             {RENTAL_TYPES.map((t) => (
@@ -117,7 +145,10 @@ function AllEquipmentContent() {
             placeholder="Min Price ($)"
             className="input input-bordered w-full"
             value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
+            onChange={(e) => {
+              setMinPrice(e.target.value);
+              setPage(1);
+            }}
           />
           <input
             type="number"
@@ -125,12 +156,18 @@ function AllEquipmentContent() {
             placeholder="Max Price ($)"
             className="input input-bordered w-full"
             value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
+            onChange={(e) => {
+              setMaxPrice(e.target.value);
+              setPage(1);
+            }}
           />
           <select
             className="select select-bordered w-full"
             value={availability}
-            onChange={(e) => setAvailability(e.target.value)}
+            onChange={(e) => {
+              setAvailability(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="all">All Availability</option>
             <option value="available">Available Only</option>
@@ -139,7 +176,10 @@ function AllEquipmentContent() {
           <select
             className="select select-bordered w-full"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => {
+              setSort(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="newest">Sort: Recently Added</option>
             <option value="price_asc">Sort: Price Low to High</option>
@@ -168,11 +208,23 @@ function AllEquipmentContent() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {equipment.map((item) => (
-            <EquipmentCard key={item._id} item={item} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {equipment.map((item) => (
+              <EquipmentCard key={item._id} item={item} />
+            ))}
+          </div>
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={totalItems}
+            onPageChange={(nextPage) => {
+              setPage(nextPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </>
       )}
     </div>
   );
