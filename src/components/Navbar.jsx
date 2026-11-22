@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Wrench, Menu, LogOut, LayoutDashboard } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
@@ -92,6 +93,7 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-end gap-2">
+          <ThemeToggle />
           {!loading && (
             <>
               {user ? (

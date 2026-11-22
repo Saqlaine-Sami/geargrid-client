@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import PrivateRoute from "@/components/PrivateRoute";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
 
 export default function DashboardLayout({ children }) {
@@ -92,6 +93,7 @@ export default function DashboardLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <span className="badge bg-teal-50 text-teal-800 border-teal-200 font-semibold">
                 {user?.role}
               </span>
