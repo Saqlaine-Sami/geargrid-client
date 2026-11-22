@@ -7,7 +7,8 @@ const uri = isValidUri
   ? rawUri
   : "mongodb://127.0.0.1:27017/equipmentRentalDB";
 
-const dbName = process.env.MONGODB_DB_NAME || "equipmentRentalDB";
+const dbName =
+  process.env.MONGODB_DB_NAME || process.env.DB_NAME || "equipmentRentalDB";
 
 let client;
 

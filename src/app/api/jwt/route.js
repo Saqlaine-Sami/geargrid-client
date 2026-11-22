@@ -27,7 +27,7 @@ export async function GET() {
         email: session.user.email,
         role,
       },
-      process.env.JWT_ACCESS_SECRET,
+      process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
