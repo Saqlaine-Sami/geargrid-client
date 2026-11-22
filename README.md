@@ -4,8 +4,8 @@
 GearGrid is a transparent and secure full-stack Equipment Rental Platform where equipment owners list items for rent, customers search, save favorites, book, and pay online through Stripe Checkout, and administrators monitor users, equipment approvals, rentals, and analytics.
 
 ## Live URL
-- Live Client URL: `https://your-client-url.vercel.app`
-- Live Server URL: `https://your-server-url.vercel.app`
+- Live Client URL: https://geargrid-client-ochre.vercel.app
+- Live Server URL: https://geargrid-server.vercel.app
 
 ## Key Features
 - **Authentication & RBAC:** BetterAuth with `@better-auth/mongo-adapter`, email/password registration with password strength validation, Google social login (defaults to `Customer`), JWT session sync, and role-based route protection (`Customer`, `Owner`, `Admin`).
